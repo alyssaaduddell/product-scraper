@@ -1,46 +1,35 @@
-import express from 'express';
-import { chromium } from 'playwright';
+const express = require("express");
+const { chromium } = require("playwright-extra");
+const StealthPlugin = require("playwright-extra-plugin-stealth");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
 
-app.get('/scrape', async (req, res) => {
+chromium.use(StealthPlugin());
+
+app.get("/scrape", async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).json({ error: 'Missing URL parameter' });
+  if (!url) return res.status(400).json({ error: "Missing URL." });
+
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
 
   try {
-    const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 
-    // Load the page more fully to bypass dynamic delays
-    await page.goto(url, { waitUntil: 'networkidle' });
+    const title = await page.title();
+    const image = await page.$eval("img", (img) => img.src).catch(() => "");
+    const price = await page.$eval("[data-test='product-price'], .price", (el) => el.textContent).catch(() => "");
 
-    // Optional: wait a moment for elements to render
-    await page.waitForTimeout(2000);
-
-    const data = await page.evaluate(() => {
-      const title =
-        document.querySelector('meta[property="og:title"]')?.content ||
-        document.title || '';
-
-      const image =
-        document.querySelector('meta[property="og:image"]')?.content || '';
-
-      const price =
-        document.querySelector('meta[property="product:price:amount"]')?.content ||
-        document.querySelector('[class*="price"], [id*="price"]')?.textContent?.match(/\$\d+(\.\d{2})?/)?.[0] || '';
-
-      return { title, price, image };
-    });
-
+    res.json({ title, price, image });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to scrape the product." });
+  } finally {
     await browser.close();
-    res.json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to scrape the product.' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
