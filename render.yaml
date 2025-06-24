@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: product-scraper
-    env: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm start
-    autoDeploy: true
