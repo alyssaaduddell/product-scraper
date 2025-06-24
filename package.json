@@ -1,15 +1,14 @@
 {
   "name": "product-scraper",
   "version": "1.0.0",
-  "description": "Scrape product title, price, and image from e-commerce URLs.",
+  "type": "module",
   "main": "server.js",
   "scripts": {
+    "postinstall": "npx playwright install --with-deps",
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "playwright": "^1.43.1",
-    "playwright-extra": "^4.3.1",
-    "playwright-extra-plugin-stealth": "^2.4.10"
+    "playwright": "^1.53.1"
   }
 }
