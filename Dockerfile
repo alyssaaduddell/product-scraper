@@ -8,4 +8,4 @@ RUN npm install
 
 EXPOSE 3000
 
-CMD ["npx", "vercel", "dev", "--listen", "0.0.0.0:3000"]
+CMD ["node", "server.js"]
