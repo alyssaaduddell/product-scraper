@@ -10,6 +10,6 @@
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "playwright-extra": "^4.3.0",
-    "playwright-extra-plugin-stealth": "^2.11.1"
+    "playwright-extra-plugin-stealth": "^2.4.17"
   }
 }
