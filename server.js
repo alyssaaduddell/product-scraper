@@ -11,13 +11,25 @@ app.get('/scrape', async (req, res) => {
   try {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+
+    // Load the page more fully to bypass dynamic delays
+    await page.goto(url, { waitUntil: 'networkidle' });
+
+    // Optional: wait a moment for elements to render
+    await page.waitForTimeout(2000);
 
     const data = await page.evaluate(() => {
-      const title = document.querySelector('meta[property="og:title"]')?.content || document.title || '';
-      const image = document.querySelector('meta[property="og:image"]')?.content || '';
-      const price = document.querySelector('meta[property="product:price:amount"]')?.content ||
-                    document.querySelector('[class*="price"], [id*="price"]')?.textContent?.match(/\$\d+(\.\d{2})?/)?.[0] || '';
+      const title =
+        document.querySelector('meta[property="og:title"]')?.content ||
+        document.title || '';
+
+      const image =
+        document.querySelector('meta[property="og:image"]')?.content || '';
+
+      const price =
+        document.querySelector('meta[property="product:price:amount"]')?.content ||
+        document.querySelector('[class*="price"], [id*="price"]')?.textContent?.match(/\$\d+(\.\d{2})?/)?.[0] || '';
+
       return { title, price, image };
     });
 
