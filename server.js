@@ -14,11 +14,28 @@ app.get('/api/scraper', async (req, res) => {
   try {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
+
+    console.log(`Navigating to: ${url}`);
     await page.goto(url, { waitUntil: 'networkidle' });
 
     const title = await page.title();
-    const price = await page.locator('text=\\$').first().textContent().catch(() => '');
-    const image = await page.locator('img').first().getAttribute('src').catch(() => '');
+    console.log(`Title: ${title}`);
+
+    let price = '';
+    try {
+      price = await page.locator('text=\\$').first().textContent();
+      console.log(`Price: ${price}`);
+    } catch (err) {
+      console.warn('Price not found');
+    }
+
+    let image = '';
+    try {
+      image = await page.locator('img').first().getAttribute('src');
+      console.log(`Image: ${image}`);
+    } catch (err) {
+      console.warn('Image not found');
+    }
 
     await browser.close();
 
@@ -29,7 +46,7 @@ app.get('/api/scraper', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Scraper error:', error);
     return res.status(500).json({ error: 'Failed to scrape the product.' });
   }
 });
