@@ -13,12 +13,18 @@ app.get('/api/scraper', async (req, res) => {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(3000); // give React time to hydrate
+    await page.goto(url, { waitUntil: 'networkidle' });
+await page.waitForTimeout(5000); // wait extra 5s to let JS load
 
-    const title = await page.locator('h1[data-buy-box-listing-title]').textContent().catch(() => '');
-    const price = await page.locator('[data-buy-box-region="price"] p').first().textContent().catch(() => '');
-    const image = await page.locator('[data-carousel-first-image] img').first().getAttribute('src').catch(() => '');
+const content = await page.content();
+console.log('Page HTML:', content.slice(0, 1000)); // Print first 1000 characters
+
+// TEMPORARY: save raw HTML for inspection
+await page.screenshot({ path: 'screenshot.png', fullPage: true });
+
+const title = await page.locator('h1[data-buy-box-listing-title]').textContent().catch(() => '');
+const price = await page.locator('[data-buy-box-region="price"] p').first().textContent().catch(() => '');
+const image = await page.locator('[data-carousel-first-image] img').first().getAttribute('src').catch(() => '');
 
     await browser.close();
 
