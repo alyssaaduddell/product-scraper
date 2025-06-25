@@ -6,11 +6,16 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/scrape', async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).json({
-    body: {},
-    error: { status_code: 400, status_message: 'Missing URL parameter' },
-    returned_an_error: true
-  });
+  if (!url) {
+    return res.status(400).json({
+      title: '',
+      price: '',
+      image: '',
+      status_code: 400,
+      status_message: 'Missing URL parameter',
+      returned_an_error: true
+    });
+  }
 
   try {
     const browser = await chromium.launch({ headless: true });
@@ -36,16 +41,23 @@ app.get('/scrape', async (req, res) => {
 
     await browser.close();
 
-    res.json({
-      body: data,
-      error: { status_code: 200, status_message: "OK" },
+    res.status(200).json({
+      title: data.title,
+      price: data.price,
+      image: data.image,
+      status_code: 200,
+      status_message: 'OK',
       returned_an_error: false
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      body: {},
-      error: { status_code: 500, status_message: error.message },
+      title: '',
+      price: '',
+      image: '',
+      status_code: 500,
+      status_message: error.message,
       returned_an_error: true
     });
   }
