@@ -6,16 +6,17 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/scrape', async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).json({ error: 'Missing URL parameter' });
+  if (!url) return res.status(400).json({
+    body: {},
+    error: { status_code: 400, status_message: 'Missing URL parameter' },
+    returned_an_error: true
+  });
 
   try {
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
-    // Load the page more fully to bypass dynamic delays
     await page.goto(url, { waitUntil: 'networkidle' });
-
-    // Optional: wait a moment for elements to render
     await page.waitForTimeout(2000);
 
     const data = await page.evaluate(() => {
@@ -34,10 +35,19 @@ app.get('/scrape', async (req, res) => {
     });
 
     await browser.close();
-    res.json(data);
+
+    res.json({
+      body: data,
+      error: { status_code: 200, status_message: "OK" },
+      returned_an_error: false
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to scrape the product.' });
+    res.status(500).json({
+      body: {},
+      error: { status_code: 500, status_message: error.message },
+      returned_an_error: true
+    });
   }
 });
 
